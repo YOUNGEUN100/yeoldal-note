@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="서울 임산부를 위한 주차별 검사·지원 체크리스트. 출산예정일과 사는 구를 넣으면 지금 챙길 일과 혜택을 보여 줘요.">
+<meta property="og:title" content="열 달 노트">
+<meta property="og:description" content="서울 임산부를 위한 주차별 검사·지원 체크리스트">
+<meta property="og:type" content="website">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font-size:14px}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>열 달 노트</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a week dial (figure + current week) up top, then the checklist as a vertical timeline of weeks, phase by phase */
+:root{
+  --bg:#F2F0F7; --surface:#FFFFFF; --ink:#1B2430; --muted:#59636F; --line:#E3E0EC;
+  --accent:#1E5B57; --accent-soft:#E3EFED; --figure:#8E84B8; --figure-2:#6C6296;
+  --womb:#F5E3DF; --womb-line:#d8a9a1; --baby:#E2A193; --warn:#94470F; --warn-soft:#F8E7D7;
+  --done:#2F7036;
+  --cat-health:#9E3548; --cat-health-bg:#F7E4E8; --cat-gov:#285A8A; --cat-gov-bg:#E3ECF6;
+  --cat-work:#6B4C12; --cat-work-bg:#F4EAD3; --cat-tip:#4A5921; --cat-tip-bg:#E9EEDA;
+  --f-display:"Hahmlet","Nanum Myeongjo",serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#15131C; --surface:#1E1B27; --ink:#E8ECEF; --muted:#A09CB0; --line:#2F2B3B;
+  --accent:#6FBFB5; --accent-soft:#183230; --figure:#A69DD0; --figure-2:#C2BAE6;
+  --womb:#3a2b2c; --womb-line:#8c5f59; --baby:#E3A495; --warn:#EDA56C; --warn-soft:#3a2a1c;
+  --done:#8fcf92;
+  --cat-health:#f0a3b0; --cat-health-bg:#3a2329; --cat-gov:#9cc3ea; --cat-gov-bg:#1f2f40;
+  --cat-work:#e2c48a; --cat-work-bg:#362d1c; --cat-tip:#c3d18e; --cat-tip-bg:#2b331d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#15131C; --surface:#1E1B27; --ink:#E8ECEF; --muted:#A09CB0; --line:#2F2B3B;
+  --accent:#6FBFB5; --accent-soft:#183230; --figure:#A69DD0; --figure-2:#C2BAE6;
+  --womb:#3a2b2c; --womb-line:#8c5f59; --baby:#E3A495; --warn:#EDA56C; --warn-soft:#3a2a1c;
+  --done:#8fcf92;
+  --cat-health:#f0a3b0; --cat-health-bg:#3a2329; --cat-gov:#9cc3ea; --cat-gov-bg:#1f2f40;
+  --cat-work:#e2c48a; --cat-work-bg:#362d1c; --cat-tip:#c3d18e; --cat-tip-bg:#2b331d; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6}
+.wrap{max-width:980px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:28px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.3}
+h1{font-size:clamp(26px,5vw,36px);font-weight:700}
+h2{font-size:22px;font-weight:700}
+p{margin:0}
+.lede{color:var(--muted);max-width:62ch}
+.eyebrow{font-size:12px;letter-spacing:.08em;color:var(--accent);font-weight:600}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+/* dial */
+.dial{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:24px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px}
+@media (max-width:720px){.dial{grid-template-columns:1fr}}
+.figure svg{width:100%;height:auto;display:block}
+.dial-info{display:grid;gap:16px;align-content:start;min-width:0}
+.weeknum{font-family:var(--f-display);font-size:56px;line-height:1;font-weight:700;font-variant-numeric:tabular-nums}
+.weeknum small{font-size:20px;font-weight:500;margin-left:4px}
+.stage{display:flex;flex-wrap:wrap;gap:8px}
+.pill{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.pill.alt{background:var(--womb);color:var(--ink)}
+.field{display:grid;gap:6px}
+.field label{font-size:13px;font-weight:600}
+.field input[type=date]{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);max-width:220px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.scale{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.note{font-size:13px;color:var(--muted)}
+.save{font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.save::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.save.cloud::before{background:var(--done)}
+.btn{font:inherit;font-size:13px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+
+/* now */
+.now{display:grid;gap:10px}
+.now ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.now li{display:flex;gap:10px;align-items:baseline;padding:10px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--line)}
+.now li.late{background:var(--warn-soft);border-color:transparent}
+.now .wk{font-family:var(--f-mono);font-size:12px;color:var(--muted);min-width:44px}
+.now li.late .wk{color:var(--warn)}
+
+/* timeline */
+.phase{display:grid;gap:14px}
+.phase-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;border-bottom:1px solid var(--line);padding-bottom:8px}
+.phase-head span{color:var(--muted);font-size:14px}
+.weeks{display:grid;gap:4px}
+.wk-row{display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;position:relative}
+.wk-row::before{content:"";position:absolute;left:31px;top:28px;bottom:-4px;width:1px;background:var(--line)}
+.wk-row:last-child::before{display:none}
+.wk-tag{font-family:var(--f-mono);font-size:13px;font-weight:500;text-align:center;padding:4px 0;border-radius:8px;background:var(--bg);border:1px solid var(--line);height:fit-content;position:relative;z-index:1}
+.wk-row.current .wk-tag{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.items{display:grid;gap:8px;padding-bottom:14px;min-width:0}
+.item{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.item input{width:18px;height:18px;margin:3px 0 0;accent-color:var(--done);cursor:pointer}
+.item h3{font-family:var(--f-body);font-size:15px;font-weight:600;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.item.done h3{color:var(--muted);text-decoration:line-through}
+.item p{color:var(--muted);font-size:14px;margin-top:2px}
+.item .src{font-size:12px;margin-top:6px;color:var(--muted)}
+.item .src a{margin-right:8px}
+.tag{font-family:var(--f-body);font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;background:var(--bg);color:var(--muted);border:1px solid var(--line);text-decoration:none}
+.tag.late{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+
+/* region */
+.region{display:grid;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px}
+.region-head{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:end;justify-content:space-between}
+.region select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);max-width:100%}
+.region-body{display:grid;gap:18px}
+.region h3{font-size:16px;font-family:var(--f-body);font-weight:600}
+.benefits{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:10px}
+.benefit{display:grid;gap:4px;padding:12px 14px;border-radius:10px;background:var(--bg);border:1px solid var(--line);align-content:start}
+.benefit b{font-size:15px}
+.benefit .amt{font-family:var(--f-mono);font-size:13px;color:var(--accent)}
+.benefit p,.region .note{font-size:13px;color:var(--muted)}
+.benefit .src{font-size:12px;color:var(--muted)}
+.gu-list{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0;padding:0}
+.gu-list li{font-size:14px;padding:6px 12px;border-radius:999px;background:var(--accent-soft);color:var(--ink)}
+.gu-list li.weak{background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+
+/* filters + categories */
+.list-head{display:grid;gap:12px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px;border-bottom:1px solid var(--line)}
+.filters{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:inherit;font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.chip .n{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip[aria-pressed="true"] .n{color:var(--bg);opacity:.75}
+.cat{font-size:11px;font-weight:600;padding:1px 7px;border-radius:6px}
+.cat.health{background:var(--cat-health-bg);color:var(--cat-health)}
+.cat.gov{background:var(--cat-gov-bg);color:var(--cat-gov)}
+.cat.work{background:var(--cat-work-bg);color:var(--cat-work)}
+.cat.tip{background:var(--cat-tip-bg);color:var(--cat-tip)}
+.chip .dot{width:8px;height:8px;border-radius:50%}
+.chip .dot.health{background:var(--cat-health)} .chip .dot.gov{background:var(--cat-gov)} .chip .dot.work{background:var(--cat-work)} .chip .dot.tip{background:var(--cat-tip)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+
+footer{display:grid;gap:8px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+@media (prefers-reduced-motion:no-preference){#fetus,#belly,#arm{transition:transform .5s ease, d .5s ease}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header style="display:grid;gap:8px">
+    <h1>열 달 노트</h1>
+    <div class="eyebrow">서울 임산부를 위한 주차별 검사·지원 체크리스트</div>
+    <p class="lede">주차마다 챙길 정부·서울시·구 지원과 검사를 한곳에 모았어요. 출산예정일과 사는 구를 넣으면 지금 주차와 놓치기 쉬운 일을 먼저 보여 드려요. 내용은 정부·공공기관 공식 안내를 기준으로 매달 점검해요.</p>
+  </header>
+
+  <section class="dial" aria-label="지금 주차">
+    <div class="figure" id="figure" role="img" aria-label="임신 주차에 따른 엄마 배와 아기 모습"></div>
+    <div class="dial-info">
+      <div>
+        <div class="weeknum" id="weeknum">5<small>주</small></div>
+        <div class="stage" style="margin-top:10px"><span class="pill" id="phasePill">임신 초기</span><span class="pill alt" id="babyPill">배아</span></div>
+      </div>
+      <p id="weekNote"></p>
+      <div class="field">
+        <label for="due">출산예정일</label>
+        <input type="date" id="due">
+        <span class="note" id="dueNote">예정일을 넣으면 오늘 기준 주차가 계산돼요.</span>
+      </div>
+      <div class="field">
+        <label for="slider">다른 주차 미리 보기</label>
+        <input type="range" id="slider" min="4" max="40" step="1" value="5">
+        <div class="scale"><span>4주</span><span>13</span><span>27</span><span>40주</span></div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
+        <span class="save" id="saveState">이 기기에 저장돼요</span>
+        <button class="btn" id="resetView" hidden>내 주차로 돌아가기</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="now" aria-labelledby="nowTitle">
+    <h2 id="nowTitle">지금 챙길 일</h2>
+    <ul id="nowList"></ul>
+  </section>
+
+  <section class="region" aria-labelledby="regionTitle">
+    <div class="region-head">
+      <h2 id="regionTitle">서울시·우리 구 혜택</h2>
+      <div class="field" style="min-width:0">
+        <label for="region">사는 구</label>
+        <select id="region"></select>
+      </div>
+    </div>
+    <div id="regionBody" class="region-body"></div>
+  </section>
+
+  <section class="list-head" aria-labelledby="listTitle">
+    <h2 id="listTitle">주차별 체크리스트</h2>
+    <div class="filters" role="group" aria-label="분류로 보기" id="filters"></div>
+  </section>
+
+  <div id="timeline" style="display:grid;gap:32px"></div>
+
+  <footer>
+    <p>그림은 주차에 따른 변화를 단순하게 표현한 것으로 실제 크기 비율과 다를 수 있어요. 검사 시기와 영양제는 담당 의료진과 상의하세요.</p>
+    <p>지원 금액과 신청 기간은 지자체·연도마다 달라요. 신청 전에 <a href="https://www.gov.kr/portal/onestopSvc/fertility" target="_blank" rel="noopener">정부24 맘편한 임신</a>이나 주소지 보건소에서 한 번 더 확인하세요.</p>
+    <p>마지막 점검: 2026년 11월 6일</p>
+  </footer>
+</div>
+
+<script>
+const S = {
+  guro:["구로구 보건소","https://www.guro.go.kr/health/contents.do?key=1310"],
+  card:["정책브리핑 임신·출산 진료비","https://www.korea.kr/multi/visualNewsView.do?newsId=148942597&pWise=sub&pWiseSub=C4"],
+  korail:["코레일","https://info.korail.com/info/selectBbsNttView.do?key=911&bbsNo=199&nttNo=26335&searchCtgry=&searchCnd=all&searchKrwd=&pageIndex=30&integrDeptCode="],
+  law:["찾기쉬운 생활법령정보","https://easylaw.go.kr/CSP/CnpClsMain.laf?popMenu=ov&csmSeq=2855&ccfNo=2&cciNo=1&cnpClsNo=1"],
+  onestop:["정부24 맘편한 임신","https://www.gov.kr/portal/onestopSvc/fertility"],
+  mois:["행정안전부","https://www.mois.go.kr/frt/bbs/type010/commonSelectBoardArticle.do?bbsId=BBSMSTR_000000000008&nttId=127045"],
+  prenatal:["국가건강정보포털 정상임신관리","https://health.kdca.go.kr/healthinfo/biz/health/gnrlzHealthInfo/gnrlzHealthInfo/gnrlzHealthInfoView.do?cntnts_sn=6301"],
+  nhis:["국민건강보험공단 건강iN","https://www.nhis.or.kr/magazin/mobile/201510/c02.html"],
+  tdap:["국가건강정보포털 백일해","https://health.kdca.go.kr/healthinfo/biz/health/gnrlzHealthInfo/gnrlzHealthInfo/gnrlzHealthInfoView.do?cntnts_sn=6676"],
+  mother:["정부24 산모·신생아 건강관리","https://www.gov.kr/portal/service/serviceInfo/PTR000050390"],
+  workenv:["생활법령 임산부 근무환경","https://m.easylaw.go.kr/MOB/CsmInfoRetrieve.laf?csmSeq=1379&ccfNo=2&cciNo=2&cnpClsNo=1"],
+  leave:["생활법령 출산전후휴가","https://easylaw.go.kr/CSP/CnpClsMain.laf?popMenu=ov&csmSeq=1379&ccfNo=3&cciNo=1&cnpClsNo=1"],
+  spouse:["정책브리핑 배우자 출산휴가","https://www.korea.kr/multi/visualNewsView.do?newsId=148939875"],
+  happy:["정책브리핑 행복출산","https://www.korea.kr/multi/visualNewsView.do?newsId=148930155"],
+  agi:["서울아기 건강 첫걸음","https://seoul-agi.seoul.go.kr/health-first-step"],
+  pump:["서울시 유축기 대여","https://mediahub.seoul.go.kr/archives/2011742"],
+  taxi:["서울엄마아빠택시","https://www.seoul.go.kr/policy/view.do?id=1024&lan=KO"],
+  highrisk:["보건복지부 모자보건지원","https://www.mohw.go.kr/menu.es?mid=a10711020200"],
+  loan:["정책브리핑 신생아 특례 대출","https://www.korea.kr/news/policyNewsView.do?newsId=148928681"]
+};
+const PHASES = [
+  {key:"early",name:"임신 초기",range:"1~11주",from:1,to:11,lead:"보건소 등록과 정부24 맘편한 임신 신청을 먼저 하면 대부분의 혜택이 한 번에 연결돼요."},
+  {key:"mid",name:"임신 중기",range:"12~27주",from:12,to:27,lead:"검사 주차는 가능한 구간 안의 한 시점이에요. 실제 날짜는 다니는 병원 일정을 따르세요."},
+  {key:"late",name:"임신 후기",range:"28주~출산",from:28,to:40,lead:"기한이 있는 백일해 접종, 산후도우미 신청, 출산휴가 신청을 먼저 챙기세요."},
+  {key:"after",name:"출산 후",range:"출산 뒤 6개월까지",from:41,to:49,lead:"출생신고와 함께 지원금을 한 번에 신청하고, 기한이 있는 환급 신청을 놓치지 마세요."}
+];
+const AFTER_LABEL = {41:"직후",42:"1~2개월",43:"6개월 안",44:"상황별"};
+function wkLabel(w){return w<=40 ? w+"주" : AFTER_LABEL[w]}
+const CATS = [
+  {key:"health",name:"병원·보건"},
+  {key:"gov",name:"정부 신청"},
+  {key:"work",name:"직장"},
+  {key:"tip",name:"생활 팁"}
+];
+const ITEMS = [
+  {id:"reg",w:5,c:"gov",t:"보건소 임산부 등록",d:"신분증과 임신확인서를 가져가요. 산모수첩은 증빙으로 받지 않는 보건소도 있어요.",s:["guro"]},
+  {id:"folic",w:5,c:"health",t:"엽산제 받기",d:"임신 확인부터 12주 무렵까지 받아요. 수량과 기간은 보건소마다 달라요.",s:["guro"]},
+  {id:"card",w:5,c:"gov",t:"국민행복카드 신청",d:"임신 1회 100만 원, 다태아는 태아당 100만 원, 분만취약지는 20만 원 추가. 분만예정일(출산일)부터 2년까지 써요.",s:["card"]},
+  {id:"ktx",w:5,c:"gov",t:"맘편한 코레일 등록",d:"임산부와 동반 1인이 일반실 40% 할인, KTX 특실은 일반실 가격이에요. 정부24 맘편한 임신이나 역 창구에서 등록해요.",s:["korail"]},
+  {id:"heart",w:6,c:"health",t:"첫 산전진찰",d:"6~7주 무렵 초음파로 아기집과 심장박동을 확인해요.",s:["nhis"]},
+  {id:"shorten",w:6,c:"work",t:"임신기 단축근무 신청 (12주 이내)",d:"하루 2시간을 줄이고 임금은 그대로예요. 시작 3일 전까지 신청서와 진단서를 내요. 회사가 거부하면 과태료 500만 원 이하예요.",s:["law"]},
+  {id:"checkup",w:6,c:"work",t:"태아검진 시간 청구",d:"정기검진에 필요한 시간을 회사에 청구할 수 있고, 이 시간 때문에 임금을 깎을 수 없어요 (5인 이상 사업장).",s:["workenv"]},
+  {id:"commute",w:6,c:"work",t:"출퇴근 시각 변경 신청",d:"하루 근무시간은 그대로 두고 출근·퇴근 시각만 옮겨요 (예: 9~6시 → 10~7시). 단축근무와 달리 임신 기간 내내 신청할 수 있어 13~31주에 특히 도움이 돼요. 회사가 거부하면 과태료 500만 원 이하예요.",s:["workenv"]},
+  {id:"care",w:6,c:"tip",t:"산후조리원 알아보기",d:"환불 규정, 병원과의 거리와 셔틀, 간호사 1명이 맡는 신생아 수, 소아과 회진, 신생아실 CCTV를 확인해요.",s:[],nogov:true},
+  {id:"car",w:7,c:"tip",t:"자동차보험 자녀할인특약",d:"임신 중에도 대상이에요. 임신확인서로 특약을 추가하고, 할인율은 보험사마다 달라요.",s:[],nogov:true},
+  {id:"test1",w:8,c:"health",t:"보건소 임신 초기 검사",d:"12주 이내에 혈액검사(빈혈·B형간염·풍진·매독·에이즈 등)와 소변검사를 무료로 받아요. 전날 밤부터 금식이 필요할 수 있어요.",s:["guro"]},
+  {id:"onestop",w:8,c:"gov",t:"맘편한 임신 원스톱 신청",d:"정부24나 주민센터·보건소에서 진료비, 엽산·철분제, 열차 할인 등을 한 번에 신청해요.",s:["onestop","mois"]},
+  {id:"fetalins",w:11,c:"tip",t:"태아보험 비교",d:"태아 관련 특약은 보통 22주 무렵까지 넣을 수 있어요. 가입 가능 주수는 보험사 상품설명서로 확인하세요.",s:[],nogov:true},
+  {id:"nt",w:12,c:"health",t:"1차 기형아 검사 (11~14주)",d:"목덜미투명대 초음파와 혈액검사를 해요.",s:["prenatal"]},
+  {id:"quad",w:16,c:"health",t:"2차 기형아 검사 (14~18주)",d:"혈액 표지물질로 위험도를 봐요. 보건소에서 받을 수 있는 곳도 있어요.",s:["prenatal","guro"]},
+  {id:"iron",w:16,c:"health",t:"보건소 철분제 받기",d:"16주 이상 등록 임산부가 대상이에요. 남은 임신 기간에 맞춰 줘요.",s:["guro"]},
+  {id:"anatomy",w:20,c:"health",t:"정밀 초음파 (20~22주 무렵)",d:"아기의 구조를 자세히 보는 검사예요.",s:["prenatal"]},
+  {id:"gdm",w:24,c:"health",t:"임신당뇨 검사 (24~28주)",d:"포도당 음료를 마신 뒤 혈당을 재요.",s:["prenatal"]},
+  {id:"tdap",w:28,c:"health",t:"백일해 접종 (27~36주)",d:"매 임신마다 맞으면 아기의 백일해 입원 위험을 줄여요.",s:["tdap"]},
+  {id:"family",w:28,c:"health",t:"가족 접종 확인",d:"아기를 돌볼 부모·조부모·돌보미도 접종 상태를 확인해요.",s:["tdap"]},
+  {id:"photo",w:30,c:"tip",t:"만삭 사진 예약",d:"보통 28~32주에 찍어요.",s:[],nogov:true},
+  {id:"shorten2",w:32,c:"work",t:"단축근무 다시 신청 (32주 이후)",d:"32주 이후부터 출산 전까지 하루 2시간 단축을 쓸 수 있어요.",s:["law"]},
+  {id:"leave",w:32,c:"work",t:"출산전후휴가 신청",d:"단태아 90일, 다태아 120일, 미숙아 100일이에요. 출산 후 45일(다태아 60일)은 꼭 확보해야 해요.",s:["leave"]},
+  {id:"helper",w:34,c:"gov",t:"산모·신생아 건강관리 신청",d:"출산예정일 40일 전부터 보건소·복지로·정부24에서 신청해요. 출산 후 마감일은 안내마다 달라 주소지 보건소에 확인하세요.",s:["mother"]},
+  {id:"spouse",w:34,c:"work",t:"배우자 출산휴가 일정 상의",d:"남편은 20일을 출산일부터 120일 안에 최대 4번 나눠 쓸 수 있어요.",s:["spouse"]},
+  {id:"weekly",w:36,c:"health",t:"매주 산전진찰",d:"28주까지 4주마다, 36주까지 2주마다, 이후에는 매주 진찰을 받아요.",s:["prenatal"]},
+  {id:"happy",w:41,c:"gov",t:"행복출산 원스톱 신청",d:"출생신고를 하면서 첫만남이용권·부모급여 등을 함께 신청해요. 정부24나 주민센터에서 해요.",s:["happy"]},
+  {id:"agi",w:41,c:"gov",t:"서울아기 건강 첫걸음",d:"출산 후 4주 안에 간호사가 집으로 찾아와요. 건강 위험요인이 있으면 아기가 2살이 될 때까지 계속 방문해요. 임신 중에도 신청할 수 있어요.",s:["agi"]},
+  {id:"spouse2",w:41,c:"work",t:"배우자 출산휴가 사용",d:"출산일부터 120일 안에 20일을 모두 써요.",s:["spouse"]},
+  {id:"pump",w:42,c:"health",t:"보건소 유축기 대여",d:"마포구 기준 2개월 빌리고 1개월 연장할 수 있어요. 소모품은 새것으로 줘요. 조건은 보건소마다 달라요.",s:["pump"]},
+  {id:"taxi",w:42,c:"gov",t:"서울엄마아빠택시",d:"24개월 이하 아기 1명당 연 10만 원 택시 포인트예요. 확인한 공식 자료가 2025년 기준이라 2026년 신청 일정은 몽땅정보통에서 확인하세요.",s:["taxi"]},
+  {id:"highrisk",w:43,c:"gov",t:"고위험 임산부 의료비 (입원했다면)",d:"조기진통·전치태반·임신중독증 등 19개 질환으로 입원했으면 의료비 90%를 최대 300만 원까지 받아요. 소득 기준은 없고 분만일부터 6개월 안에 보건소나 e보건소에서 신청해요.",s:["highrisk"]},
+  {id:"loan",w:44,c:"gov",t:"신생아 특례 대출",d:"2년 안에 출산한 무주택 가구가 대상이에요. 9억 원 이하 주택은 최대 5억 원, 전세는 최대 3억 원. 출산 후 기금e든든에서 신청해요.",s:["loan"]}
+];
+
+const NOTES = [
+  [4,"아기집이 자리 잡는 시기예요. 임신 확인 후 보건소 등록부터 해요."],
+  [7,"초음파로 심장박동을 확인할 수 있는 시기예요."],
+  [10,"이 무렵부터 배아를 태아라고 불러요."],
+  [14,"임신 중기가 시작돼요. 입덧이 줄어드는 분이 많아요."],
+  [20,"배가 눈에 띄게 나오고 태동을 느끼기 시작해요."],
+  [28,"임신 후기예요. 진찰이 2주마다로 늘어요."],
+  [33,"아기가 머리를 아래로 두는 자세를 잡아가요."],
+  [37,"출산이 가까워요. 매주 진찰을 받아요."]
+];
+
+/* ---------- region data (서울시 공식 자료, 2026-11-06 확인) ---------- */
+const UMPPA_ALL = "https://umppa.seoul.go.kr/hmpg/life/vwal/contPageDetail.do?conts_no=4AA6EA0D7CD11876E063A6022162EE78";
+const SEOUL = [
+  {t:"임산부 교통비", amt:"첫째 70만 원 · 둘째 80만 원 · 셋째 이상 100만 원", d:"임신 3개월부터 출산 후 6개월 안에 신청해요. 대중교통·택시·철도는 전국, 주유소는 서울에서만 쓸 수 있고 출산 후 1년까지 써요.", src:["서울시 보도자료","https://news.seoul.go.kr/welfare/archives/577980"], when:"임신 3개월~"},
+  {t:"서울형 산후조리경비", amt:"첫째 100만 원 · 둘째 120만 원 · 셋째 이상 150만 원", d:"출산 후 180일 안에 신청하고 바우처는 출산 후 1년까지 서울에서 써요.", src:["서울시 보도자료","https://news.seoul.go.kr/welfare/archives/577980"], when:"출산 후"},
+  {t:"35세 이상 임산부 의료비", amt:"임신 1회 최대 50만 원", d:"외래 진료와 검사 본인부담금을 돌려받아요. 출산 후 6개월 안에 영수증과 진료비 세부내역을 내요. 2026년 출산은 1991년생부터 대상이에요.", src:["서울시","https://www.seoul.go.kr/news/news_report.do?tr_code=short&nttNo=456262"], when:"출산 후 6개월 안"},
+  {t:"임산부 친환경농산물", amt:"연 24만 원 상당 (본인 20% 부담)", d:"해마다 여름에 구별로 신청을 받고 추첨해요. 2026년 신청은 7~9월에 끝났어요.", src:["서울시","https://news.seoul.go.kr/economy/archives/573440"], when:"매년 7월 무렵"}
+];
+const SEOUL_NOTE = "교통비와 산후조리경비는 2026년 7월부터 신청일 기준 서울에 3개월 이상 살아야 받을 수 있어요. 신청은 탄생육아 몽땅정보통에서 해요.";
+const GU = {
+  "강남구":{site:"https://www.gangnam.go.kr",items:["출산양육지원금","산후건강관리비용 지원 (본인부담금 환급)","출산·양육 주택 취득세 감면","장애인가정 출산지원금"]},
+  "강동구":{site:"https://www.gangdong.go.kr",items:["모유수유클리닉"]},
+  "강북구":{site:"https://www.gangbuk.go.kr",items:["임산부 전용 안전벨트 대여","산후비만관리 프로그램"]},
+  "강서구":{site:"https://www.gangseo.seoul.kr",items:["임산부 가사돌봄 서비스"]},
+  "관악구":{site:"https://www.gwanak.go.kr",items:["출생축하용품 지원","건강한 출산·똑똑한 육아 교육"]},
+  "광진구":{site:"https://www.gwangjin.go.kr",items:["출생아 작명 서비스","장애인가정 출산지원금"]},
+  "구로구":{site:"https://www.guro.go.kr",items:["구로형 산후조리비용 지원","다자녀 출생축하금"]},
+  "금천구":{site:"https://www.geumcheon.go.kr",items:["출생축하금 지원","출생축하용품 지원","방문 모유수유 지원"]},
+  "노원구":{site:"https://www.nowon.kr",items:["다자녀가정 출산축하용품 지원"]},
+  "도봉구":{site:"https://www.dobong.go.kr",items:["출생축하용품 지원","장애인가정 출산지원금"]},
+  "동대문구":{site:"https://www.ddm.go.kr",items:["아가사랑센터"]},
+  "동작구":{site:"https://www.dongjak.go.kr",items:["출산축하금","산모·신생아 건강관리 본인부담금 지원"]},
+  "마포구":{site:"https://www.mapo.go.kr",items:[]},
+  "서대문구":{site:"https://www.sdm.go.kr",items:["임신축하금","공공산후조리원 이용료 감면","책배달 서비스"]},
+  "서초구":{site:"https://www.seocho.go.kr",items:[]},
+  "성동구":{site:"https://www.sd.go.kr",items:["산후조리비용 지원","임산부 가사돌봄 서비스"]},
+  "성북구":{site:"https://www.sb.go.kr",items:["출산 행복지원금","장애인가정 출산지원금"]},
+  "송파구":{site:"https://www.songpa.go.kr",items:["출산축하금 지원"]},
+  "양천구":{site:"https://www.yangcheon.go.kr",items:[]},
+  "영등포구":{site:"https://www.ydp.go.kr",items:[]},
+  "용산구":{site:"https://www.yongsan.go.kr",items:["출산지원금 (셋째아부터)","산모·신생아 건강관리 본인부담금 지원","장애인가정 출산지원금"]},
+  "은평구":{site:"https://www.ep.go.kr",items:["임산부·영유아가정 아이맘택시","셋째아가정 산후건강관리 지원","부모 심리지원 서비스","한방 난임 치료 지원","장애인가정 출산지원금"]},
+  "종로구":{site:"https://www.jongno.go.kr",items:["임산부 선천성 기형아 검사·풍진항체검사","둘째아 이상 출산장려 건강보험료 지원","출생축하용품 지원"]},
+  "중구":{site:"https://www.junggu.seoul.kr",items:["중구형 산후조리비 지원","출산양육지원금","장애인가정 출산지원금"]},
+  "중랑구":{site:"https://www.jungnang.go.kr",items:["중랑형 출산축하용품 지원","아이맘플러스센터","장애인가정 출산지원금"]}
+};
+
+/* ---------- state ---------- */
+let state = {due:"", checked:{}, region:""};
+let viewWeek = null;
+let catFilter = "all";
+try{const f=localStorage.getItem("pregnancy-weeks-filter");if(f&&(f==="all"||CATS.some(c=>c.key===f)))catFilter=f;}catch(e){}
+function vis(i){return catFilter==="all"||i.c===catFilter}
+const CATNAME = Object.fromEntries(CATS.map(c=>[c.key,c.name]));
+let store = {mode:"local", ref:null};
+const LS = "pregnancy-weeks-v1";
+function loadLocal(){try{const r=localStorage.getItem(LS);if(r){const v=JSON.parse(r);if(v&&typeof v==="object")state={due:v.due||"",checked:v.checked||{},region:v.region||""};}}catch(e){}}
+function saveLocal(){try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){}}
+let saveTimer=null, writing=false, again=false;
+function persist(){
+  saveLocal();
+  if(store.mode!=="cloud") return;
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(flush,600);
+}
+async function flush(){
+  if(writing){again=true;return}
+  writing=true;
+  try{await store.ref.set({due:state.due,checked:state.checked,region:state.region});setSave("cloud");}
+  catch(e){store.mode="local";setSave("local");}
+  writing=false;
+  if(again){again=false;flush();}
+}
+function setSave(m){
+  const el=document.getElementById("saveState");
+  el.className="save"+(m==="cloud"?" cloud":"");
+  el.textContent=m==="cloud"?"내 계정에 저장돼요 · 다른 기기에서도 보여요":"이 기기 브라우저에 저장돼요";
+}
+
+/* ---------- weeks ---------- */
+function weekFromDue(due){
+  if(!due) return null;
+  const d=new Date(due+"T00:00:00"); if(isNaN(d)) return null;
+  const now=new Date(); const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const days=280-Math.round((d-today)/86400000);
+  if(days<0||days>300) return null;
+  return {w:Math.floor(days/7),d:days%7};
+}
+function currentWeek(){const r=weekFromDue(state.due);return r?r.w:null}
+function shownWeek(){return viewWeek ?? currentWeek() ?? 5}
+
+/* ---------- figure ---------- */
+function figureSVG(w){
+  const t=Math.max(0,Math.min(1,(w-4)/36));
+  const b=4+58*Math.pow(t,1.35);           // belly depth
+  const by=176+6*t;                         // belly center
+  const body=`M120 72 C112 100 110 150 112 190 C113 210 117 225 118 236 L124 296 L146 296 L150 238 C151 228 151 222 150 ${by+38} C${150+b*1.15} ${by+24} ${150+b*1.15} ${by-26} 152 ${by-38} C156 132 164 116 160 102 C156 90 148 80 142 72 Z`;
+  const arm=`M136 96 C130 120 128 150 ${136+b*0.35} ${by+4}`;
+  const baby = w<10 ? embryo(w) : fetus(w);
+  return `<svg viewBox="0 0 330 310" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <ellipse cx="135" cy="300" rx="62" ry="6" fill="var(--line)"/>
+    <path d="M108 44 C108 18 150 14 156 40 C158 56 150 66 146 70 C136 72 120 70 112 64 Z" fill="var(--figure-2)"/>
+    <circle cx="134" cy="48" r="22" fill="var(--figure)"/>
+    <path d="M110 40 C112 22 146 18 152 34 C138 30 122 34 110 40 Z" fill="var(--figure-2)"/>
+    <path id="belly" d="${body}" fill="var(--figure)"/>
+    <path id="arm" d="${arm}" fill="none" stroke="var(--figure-2)" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="${150+b*0.55}" cy="${by}" r="5" fill="var(--womb-line)"/>
+    <path d="M${155+b*0.55} ${by} C ${205} ${by-10} 200 175 196 175" fill="none" stroke="var(--womb-line)" stroke-width="1.5" stroke-dasharray="3 4"/>
+    <circle cx="258" cy="172" r="64" fill="var(--womb)" stroke="var(--womb-line)" stroke-width="1.5"/>
+    <g id="fetus">${baby}</g>
+    <text x="258" y="258" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--muted)">${w}주</text>
+  </svg>`;
+}
+function embryo(w){
+  const s=0.35+((w-4)/6)*0.35;
+  return `<g transform="translate(258 172) scale(${s.toFixed(2)})">
+    <circle cx="-4" cy="-14" r="15" fill="var(--baby)"/>
+    <path d="M-12 -2 C-18 20 -2 36 14 30 C24 26 22 14 14 12" fill="none" stroke="var(--baby)" stroke-width="13" stroke-linecap="round"/>
+    <circle cx="2" cy="-16" r="2.4" fill="var(--womb-line)"/>
+  </g>`;
+}
+function fetus(w){
+  const s=0.5+((w-10)/30)*0.62;
+  const flip = w>=33 ? 180 : (w>=28 ? (w-28)*36 : 0);
+  return `<g transform="translate(258 172) rotate(${flip}) scale(${s.toFixed(2)})">
+    <path d="M6 6 C28 18 36 36 22 44" fill="none" stroke="var(--womb-line)" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="4" cy="10" rx="18" ry="24" transform="rotate(-18 4 10)" fill="var(--baby)"/>
+    <ellipse cx="18" cy="24" rx="9" ry="17" transform="rotate(-40 18 24)" fill="var(--baby)" opacity=".85"/>
+    <circle cx="-6" cy="-24" r="19" fill="var(--baby)"/>
+    <path d="M-10 -6 C-16 4 -14 12 -6 16" fill="none" stroke="var(--womb)" stroke-width="5" stroke-linecap="round" opacity=".7"/>
+    <path d="M-16 -26 C-14 -28 -11 -28 -9 -26" fill="none" stroke="var(--womb-line)" stroke-width="2" stroke-linecap="round"/>
+  </g>`;
+}
+
+/* ---------- render ---------- */
+function phaseOf(w){return PHASES.find(p=>w>=p.from&&w<=p.to)||PHASES[2]}
+function link([name,url]){const a=document.createElement("a");a.href=url;a.target="_blank";a.rel="noopener";a.textContent=name;return a}
+
+function renderDial(){
+  const w=shownWeek(), cur=weekFromDue(state.due);
+  document.getElementById("figure").innerHTML=figureSVG(Math.max(4,Math.min(40,w)));
+  const wn=document.getElementById("weeknum");
+  wn.innerHTML="";
+  wn.append(String(w));
+  const sm=document.createElement("small");
+  sm.textContent = (viewWeek===null && cur && cur.d) ? `주 ${cur.d}일` : "주";
+  wn.append(sm);
+  document.getElementById("phasePill").textContent=phaseOf(w).name;
+  document.getElementById("babyPill").textContent= w<10 ? "배아" : "태아";
+  let note=NOTES[0][1]; for(const [k,v] of NOTES){ if(w>=k) note=v; }
+  document.getElementById("weekNote").textContent=note;
+  document.getElementById("slider").value=Math.max(4,Math.min(40,w));
+  document.getElementById("resetView").hidden = !(viewWeek!==null && cur);
+  const dn=document.getElementById("dueNote");
+  if(state.due && !cur) dn.textContent="예정일이 범위를 벗어나요. 날짜를 확인해 주세요.";
+  else if(cur) dn.textContent=`오늘 기준 ${cur.w}주 ${cur.d}일이에요.`;
+  else dn.textContent="예정일을 넣으면 오늘 기준 주차가 계산돼요.";
+}
+
+function renderNow(){
+  const ul=document.getElementById("nowList"); ul.innerHTML="";
+  const cur=currentWeek();
+  const ref = viewWeek ?? cur;
+  let list;
+  if(ref===null){
+    list=ITEMS.filter(vis).filter(i=>i.w<=6&&!state.checked[i.id]).slice(0,4).map(i=>({i,late:false}));
+  }else{
+    const late=ITEMS.filter(vis).filter(i=>i.w<ref&&!state.checked[i.id]).map(i=>({i,late:true}));
+    const soon=ITEMS.filter(vis).filter(i=>i.w>=ref&&i.w<=ref+3&&!state.checked[i.id]).map(i=>({i,late:false}));
+    list=[...late.slice(-4),...soon].slice(0,6);
+  }
+  if(!list.length){const li=document.createElement("li");li.textContent="이 시기에 남은 일이 없어요.";ul.append(li);return}
+  for(const {i,late} of list){
+    const li=document.createElement("li"); if(late) li.className="late";
+    const wk=document.createElement("span"); wk.className="wk"; wk.textContent=wkLabel(i.w);
+    const tx=document.createElement("span"); tx.textContent=i.t+(late?" · 아직 안 했어요":"");
+    li.append(wk,tx); ul.append(li);
+  }
+}
+
+function renderTimeline(){
+  const root=document.getElementById("timeline"); root.innerHTML="";
+  const cur=currentWeek(), ref=viewWeek ?? cur;
+  for(const p of PHASES){
+    const sec=document.createElement("section"); sec.className="phase"; sec.id=p.key;
+    const head=document.createElement("div"); head.className="phase-head";
+    const h=document.createElement("h2"); h.textContent=p.name;
+    const r=document.createElement("span"); r.textContent=p.range;
+    head.append(h,r);
+    const lead=document.createElement("p"); lead.className="lede"; lead.textContent=p.lead;
+    const weeks=document.createElement("div"); weeks.className="weeks";
+    const groups=[...new Set(ITEMS.filter(i=>vis(i)&&i.w>=p.from&&i.w<=p.to).map(i=>i.w))];
+    if(!groups.length) continue;
+    for(const w of groups){
+      const row=document.createElement("div"); row.className="wk-row";
+      const next=groups.find(g=>g>w) ?? (p.to+1);
+      if(ref!==null && ref>=w && ref<next) row.classList.add("current");
+      const tag=document.createElement("div"); tag.className="wk-tag"; tag.textContent=wkLabel(w);
+      const items=document.createElement("div"); items.className="items";
+      for(const it of ITEMS.filter(i=>i.w===w&&vis(i))){
+        const done=!!state.checked[it.id];
+        const card=document.createElement("label"); card.className="item"+(done?" done":"");
+        const cb=document.createElement("input"); cb.type="checkbox"; cb.id="cb-"+it.id; cb.checked=done;
+        cb.addEventListener("change",()=>{ if(cb.checked) state.checked[it.id]=true; else delete state.checked[it.id]; persist(); renderNow(); renderFilters(); card.classList.toggle("done",cb.checked); });
+        const body=document.createElement("div"); body.style.minWidth="0";
+        const h3=document.createElement("h3"); const ct=document.createElement("span"); ct.className="cat "+it.c; ct.textContent=CATNAME[it.c]; h3.append(ct,it.t);
+        if(!done && ref!==null && it.w<ref){const t=document.createElement("span");t.className="tag late";t.textContent="지난 주차";h3.append(t)}
+        const d=document.createElement("p"); d.textContent=it.d;
+        const src=document.createElement("div"); src.className="src";
+        if(it.nogov){src.textContent="정부 기준 없음 · 생활 팁"}
+        else{src.append("출처 ");for(const k of it.s) src.append(link(S[k]));}
+        body.append(h3,d,src); card.append(cb,body); items.append(card);
+      }
+      row.append(tag,items); weeks.append(row);
+    }
+    sec.append(head,lead,weeks); root.append(sec);
+  }
+}
+function renderRegion(){
+  const body=document.getElementById("regionBody"); body.innerHTML="";
+  const r=state.region;
+  const mk=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e};
+  if(!r||!GU[r]){body.append(mk("p","note","사는 구를 고르면 서울시 공통 혜택과 그 구에서 따로 하는 사업을 보여 드려요. 고른 구는 체크리스트와 함께 저장돼요."));return}
+  const wrap1=mk("div",null); wrap1.style.display="grid"; wrap1.style.gap="10px";
+  wrap1.append(mk("h3",null,"서울시 공통"));
+  const grid=mk("div","benefits");
+  for(const b of SEOUL){
+    const c=mk("div","benefit");
+    c.append(mk("b",null,b.t),mk("span","amt",b.amt),mk("p",null,b.d));
+    const s=mk("div","src","신청 시기: "+b.when+" · "); s.append(link(b.src)); c.append(s);
+    grid.append(c);
+  }
+  const sn=mk("p","note",SEOUL_NOTE+" ");
+  sn.append(link(["탄생육아 몽땅정보통","https://umppa.seoul.go.kr/hmpg/sprt/bzin/bzmgComtList.do"]));
+  wrap1.append(grid,sn);
+  const g=GU[r];
+  const wrap2=mk("div",null); wrap2.style.display="grid"; wrap2.style.gap="10px";
+  wrap2.append(mk("h3",null,r+"에서 따로 하는 사업"));
+  if(g.items.length){
+    const ul=mk("ul","gu-list");
+    for(const it of g.items){ul.append(mk("li",/장애인/.test(it)?"weak":null,it))}
+    wrap2.append(ul);
+  }else{
+    wrap2.append(mk("p","note","서울시 몽땅정보통에는 "+r+"의 자체 임신·출산 사업이 따로 올라와 있지 않아요. 구청에 따로 있는 사업이 있을 수 있어요."));
+  }
+  const gn=mk("p","note","금액과 조건(거주 기간 등)은 구마다 달라요. 신청 전에 ");
+  gn.append(link([r+" 홈페이지",g.site])," 또는 ",link(["몽땅정보통 자치구 목록",UMPPA_ALL]));
+  gn.append("에서 확인하세요.");
+  wrap2.append(gn);
+  body.append(wrap1,wrap2);
+}
+function renderFilters(){
+  const box=document.getElementById("filters"); box.innerHTML="";
+  const all=[{key:"all",name:"전체"},...CATS];
+  for(const c of all){
+    const its=c.key==="all"?ITEMS:ITEMS.filter(i=>i.c===c.key);
+    const done=its.filter(i=>state.checked[i.id]).length;
+    const b=document.createElement("button"); b.type="button"; b.className="chip"; b.id="f-"+c.key;
+    b.setAttribute("aria-pressed",String(catFilter===c.key));
+    if(c.key!=="all"){const d=document.createElement("span");d.className="dot cat "+c.key;d.style.padding="0";b.append(d)}
+    b.append(c.name);
+    const n=document.createElement("span"); n.className="n"; n.textContent=done+"/"+its.length; b.append(n);
+    b.addEventListener("click",()=>{catFilter=c.key;try{localStorage.setItem("pregnancy-weeks-filter",catFilter)}catch(e){}renderFilters();renderNow();renderTimeline()});
+    box.append(b);
+  }
+}
+function renderAll(){renderDial();renderNow();renderRegion();renderFilters();renderTimeline()}
+
+/* ---------- events ---------- */
+document.getElementById("due").addEventListener("change",e=>{state.due=e.target.value||"";viewWeek=null;persist();renderAll()});
+document.getElementById("slider").addEventListener("input",e=>{viewWeek=+e.target.value;renderDial();renderNow();renderTimeline()});
+document.getElementById("resetView").addEventListener("click",()=>{viewWeek=null;renderAll()});
+
+(function(){
+  const sel=document.getElementById("region");
+  const opts=[["","구를 골라 주세요"],...Object.keys(GU).sort((a,b)=>a.localeCompare(b,"ko")).map(k=>[k,k])];
+  for(const [v,t] of opts){const o=document.createElement("option");o.value=v;o.textContent=t;sel.append(o)}
+  sel.addEventListener("change",e=>{state.region=e.target.value;persist();renderRegion()});
+})();
+
+/* ---------- boot ---------- */
+loadLocal();
+document.getElementById("due").value=state.due;
+document.getElementById("region").value=state.region;
+setSave("local");
+renderAll();
+
+(async()=>{
+  try{
+    if(!window.claude||!claude.use) return;
+    const [db,user]=await Promise.all([claude.use("db"),claude.use("user")]);
+    if(!db||!user) return;
+    const uid=await user.id(); if(!uid) return;
+    const ref=db.doc("data/users/"+uid+"/plan");
+    const snap=await ref.get();
+    store={mode:"cloud",ref};
+    if(snap.exists){
+      const v=snap.data()||{};
+      state={due:v.due||state.due,checked:{...state.checked,...(v.checked||{})},region:v.region||state.region};
+      saveLocal(); setSave("cloud");
+      document.getElementById("due").value=state.due;
+      document.getElementById("region").value=state.region;
+      renderAll();
+    }else if(state.due||state.region||Object.keys(state.checked).length){
+      await flush();   // first sign-in: move what this browser already had into the account
+    }else{
+      const el=document.getElementById("saveState");
+      el.className="save cloud"; el.textContent="로그인됨 · 체크하면 내 계정에 저장돼요";
+    }
+  }catch(e){ store={mode:"local",ref:null}; setSave("local"); }
+})();
+</script>
+
+</body>
+</html>
