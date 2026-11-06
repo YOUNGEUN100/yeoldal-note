@@ -121,6 +121,16 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .gu-list li{font-size:14px;padding:6px 12px;border-radius:999px;background:var(--accent-soft);color:var(--ink)}
 .gu-list li.weak{background:var(--bg);border:1px solid var(--line);color:var(--muted)}
 
+/* backup */
+.backup{display:grid;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px}
+.backup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:16px}
+.backup textarea{font-family:var(--f-mono);font-size:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);resize:vertical;width:100%;box-sizing:border-box;word-break:break-all}
+.backup .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.confirm{display:grid;gap:8px;padding:12px;border-radius:10px;background:var(--accent-soft)}
+.confirm p{margin:0;font-size:14px}
+.btn.primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.note.ok{color:var(--done)} .note.err{color:var(--warn)}
+
 /* filters + categories */
 .list-head{display:grid;gap:12px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px;border-bottom:1px solid var(--line)}
 .filters{display:flex;flex-wrap:wrap;gap:8px}
@@ -170,7 +180,28 @@ footer{display:grid;gap:8px;font-size:13px;color:var(--muted);border-top:1px sol
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
         <span class="save" id="saveState">이 기기에 저장돼요</span>
-        <button class="btn" id="resetView" hidden>내 주차로 돌아가기</button>
+        <span style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="resetView" hidden>내 주차로 돌아가기</button><button class="btn" id="openBackup" aria-expanded="false" aria-controls="backup">기록 옮기기</button></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="backup" id="backup" hidden aria-labelledby="backupTitle">
+    <h2 id="backupTitle">다른 기기로 기록 옮기기</h2>
+    <p class="note">기록은 이 브라우저에만 저장돼요. 아래 코드를 복사해 다른 기기의 같은 페이지에 붙여 넣으면 체크·출산예정일·사는 구가 그대로 옮겨져요. 코드는 어디에도 저장되지 않아요. 예정일이 들어 있으니 다른 사람에게는 보내지 마세요.</p>
+    <div class="backup-grid">
+      <div class="field">
+        <label for="exportCode">내 백업 코드</label>
+        <textarea id="exportCode" readonly rows="3"></textarea>
+        <div class="row"><button class="btn" id="copyCode">코드 복사</button><span class="note" id="copyMsg" role="status"></span></div>
+      </div>
+      <div class="field">
+        <label for="importCode">백업 코드 붙여 넣기</label>
+        <textarea id="importCode" rows="3" placeholder="YD1.로 시작하는 코드"></textarea>
+        <div class="row"><button class="btn" id="checkCode">불러오기</button><span class="note" id="importMsg" role="status"></span></div>
+        <div class="confirm" id="confirmBox" hidden>
+          <p id="confirmText"></p>
+          <div class="row"><button class="btn primary" id="applyCode">이 기록으로 바꾸기</button><button class="btn" id="cancelCode">취소</button></div>
+        </div>
       </div>
     </div>
   </section>
@@ -354,7 +385,7 @@ async function flush(){
 function setSave(m){
   const el=document.getElementById("saveState");
   el.className="save"+(m==="cloud"?" cloud":"");
-  el.textContent=m==="cloud"?"내 계정에 저장돼요 · 다른 기기에서도 보여요":"이 기기 브라우저에 저장돼요";
+  el.textContent=m==="cloud"?"내 계정에 저장돼요 · 다른 기기에서도 보여요":"이 기기 브라우저에 저장돼요 · 다른 기기는 '기록 옮기기'로";
 }
 
 /* ---------- weeks ---------- */
@@ -557,6 +588,57 @@ document.getElementById("resetView").addEventListener("click",()=>{viewWeek=null
   for(const [v,t] of opts){const o=document.createElement("option");o.value=v;o.textContent=t;sel.append(o)}
   sel.addEventListener("change",e=>{state.region=e.target.value;persist();renderRegion()});
 })();
+
+/* ---------- backup code ---------- */
+function encodeState(){
+  const o={v:1,d:state.due||"",r:state.region||"",c:Object.keys(state.checked)};
+  const b=btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+  return "YD1."+b.replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+function decodeState(code){
+  const t=(code||"").replace(/\s+/g,"");
+  if(!t.startsWith("YD1.")) throw new Error("YD1.로 시작하는 백업 코드를 붙여 넣어 주세요.");
+  let b=t.slice(4).replace(/-/g,"+").replace(/_/g,"/"); while(b.length%4) b+="=";
+  let o; try{o=JSON.parse(decodeURIComponent(escape(atob(b))));}catch(e){throw new Error("코드가 잘렸거나 바뀐 것 같아요. 처음부터 끝까지 다시 복사해 주세요.");}
+  if(!o||o.v!==1) throw new Error("이 페이지에서 만든 코드가 아니에요.");
+  const due=(typeof o.d==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(o.d))?o.d:"";
+  const region=(typeof o.r==="string"&&GU[o.r])?o.r:"";
+  const ids=new Set(ITEMS.map(i=>i.id));
+  const checked={}; if(Array.isArray(o.c)) for(const id of o.c){ if(typeof id==="string"&&ids.has(id)) checked[id]=true; }
+  return {due,region,checked};
+}
+let pending=null;
+function setMsg(id,text,kind){const el=document.getElementById(id);el.textContent=text;el.className="note"+(kind?" "+kind:"")}
+function openBackup(open){
+  const box=document.getElementById("backup"), btn=document.getElementById("openBackup");
+  box.hidden=!open; btn.setAttribute("aria-expanded",String(open));
+  if(open){document.getElementById("exportCode").value=encodeState();setMsg("copyMsg","");}
+}
+document.getElementById("openBackup").addEventListener("click",()=>openBackup(document.getElementById("backup").hidden));
+document.getElementById("copyCode").addEventListener("click",()=>{
+  const ta=document.getElementById("exportCode"); ta.value=encodeState();
+  const fallback=()=>{ta.focus();ta.select();setMsg("copyMsg","선택해 두었어요. 길게 눌러 복사해 주세요.");};
+  try{navigator.clipboard.writeText(ta.value).then(()=>setMsg("copyMsg","복사했어요.","ok"),fallback);}catch(e){fallback();}
+});
+document.getElementById("checkCode").addEventListener("click",()=>{
+  document.getElementById("confirmBox").hidden=true; pending=null;
+  try{
+    pending=decodeState(document.getElementById("importCode").value);
+    const n=Object.keys(pending.checked).length;
+    document.getElementById("confirmText").textContent=`체크 ${n}개`+(pending.due?`, 출산예정일 ${pending.due}`:"")+(pending.region?`, ${pending.region}`:"")+"가 들어 있어요. 지금 이 기기의 기록을 이 내용으로 바꿀까요?";
+    document.getElementById("confirmBox").hidden=false; setMsg("importMsg","");
+  }catch(e){setMsg("importMsg",e.message,"err");}
+});
+document.getElementById("cancelCode").addEventListener("click",()=>{pending=null;document.getElementById("confirmBox").hidden=true;});
+document.getElementById("applyCode").addEventListener("click",()=>{
+  if(!pending) return;
+  state={due:pending.due,checked:pending.checked,region:pending.region}; pending=null; viewWeek=null;
+  persist();
+  document.getElementById("due").value=state.due; document.getElementById("region").value=state.region;
+  document.getElementById("confirmBox").hidden=true; document.getElementById("importCode").value="";
+  document.getElementById("exportCode").value=encodeState();
+  renderAll(); setMsg("importMsg","기록을 옮겼어요.","ok");
+});
 
 /* ---------- boot ---------- */
 loadLocal();
